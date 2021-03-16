@@ -140,6 +140,7 @@ public class Booking {
             throw new IllegalStateException("The room number: " + roomNumber + " is invalid.");
         }
 
+        customer.setBookingStatus("Checking OUT");
         IO.outputString(printInvoice(customer));
         rooms.freeRoom(roomNumber);
     }
