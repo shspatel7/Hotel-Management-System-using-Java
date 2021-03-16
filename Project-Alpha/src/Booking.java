@@ -223,7 +223,7 @@ public class Booking {
             try {
                 String[] optionSList = new String[]{"1: Quit", "2: add a new customer", "3: add a new staff member", "4: Check IN", "5: Check OUT", "6: Display Summary"};
                 task = IO.readChoice(optionSList);
-
+                task += 1;
                 if (task == 1) managementSystem.summary();
                 else if (task == 2) managementSystem.addCustomer();
                 else if (task == 3) managementSystem.addStaff();
@@ -232,10 +232,6 @@ public class Booking {
                 else if (task == 6) managementSystem.summary();
                 else IO.outputString("Invalid option, try again.");
             } catch (RuntimeException e) {
-                // No matter what  exception is thrown, this catches it
-                // Dealing with it means discarding whatever went wrong
-                // and starting the loop over.  Easy for the programmer,
-                // tedious for the user.
                 IO.outputString(e.getMessage());
             }
         }
