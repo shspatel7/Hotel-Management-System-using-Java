@@ -1,3 +1,11 @@
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -13,10 +21,28 @@ public class Booking {
     private long checkInDateTime;
     private long checkOutDateTime;
 
-
-    public Booking() {
+    public Booking() throws IOException {
         customers = new TreeMap<String, Customer>();
         staffs = new TreeMap<String, Staff>();
+        CSVReader reader = new CSVReaderBuilder(new FileReader("Customer.csv")).withSkipLines(1).build();
+        List<String[]> allCustomerData = reader.readAll();
+        for (String[] row : allCustomerData) {
+
+            Customer customer = new Customer(row[0],row[1],row[2]);
+            customer.setRoomNumber(Integer.parseInt(row[3]));
+            customer.setBookingID(Integer.parseInt(row[4]));
+            customer.setBookingStatus(row[3]);
+            customers.put(customer.getIdProof(), customer);
+        }
+        reader.close();
+        reader = new CSVReaderBuilder(new FileReader("Staff.csv")).withSkipLines(1).build();
+        List<String[]> allStaffData = reader.readAll();
+        for (String[] row : allStaffData) {
+            Staff staff = new Staff(row[0],row[1],row[2],row[3],row[4]);
+            staffs.put(staff.getStaffId(), staff);
+        }
+        reader.close();
+
         IO.outputString(">>>>>>> Welcome to the Motel Management System <<<<<<<");
         int firstRoom = IO.readInt("Please enter the first room number: ");
         IO.outputString("Entered: " + firstRoom);
@@ -31,7 +57,7 @@ public class Booking {
      * Gets the information for a staff member and then add them
      * to the dictionary of all staff.
      */
-    public void addStaff() {
+    public void addStaff() throws IOException {
         IO.outputString("Adding Staff member to the database...");
         String id = IO.readString("Please enter your id: ");
         IO.outputString("Entered: " + id);
@@ -54,13 +80,14 @@ public class Booking {
 
         Staff staff = new Staff(name, staffID, designation, null, null);
         staffs.put(staffID, staff);
+        updateCSV(customers,staffs);
     }
 
     /**
      * Gets the information for a new customer and then add the customer
      * to the dictionary of all customers.
      */
-    public void addCustomer() {
+    public void addCustomer() throws IOException {
         IO.outputString("Adding Customer to the database...");
         String name = IO.readString("Enter the name of the Customer: ");
         IO.outputString("Entered: " + name);
@@ -74,12 +101,13 @@ public class Booking {
 
         Customer customer = new Customer(name, contactNumber, id);
         customers.put(id, customer);
+        updateCSV(customers,staffs);
     }
 
     /**
      * The check in method that assigns room to the customer
      */
-    public void checkIN() {
+    public void checkIN() throws IOException {
         IO.outputString("Assigning Room to a customer...");
         String id = IO.readString("Enter the id proof of the customer: ");
 
@@ -114,12 +142,13 @@ public class Booking {
         customer.setRoomNumber(roomNumber);
         customer.setBookingID(bookingID);
         customer.setBookingStatus("Reserved");
+        updateCSV(customers,staffs);
     }
 
     /**
      * The checkOUT method that checks out the customer.
      */
-    public void checkOUT() {
+    public void checkOUT() throws IOException {
         IO.outputString("Checking OUT Customer...");
         String id = IO.readString("Enter the id proof of the customer: ");
 
@@ -143,6 +172,7 @@ public class Booking {
         customer.setBookingStatus("Checking OUT");
         IO.outputString(printInvoice(customer));
         rooms.freeRoom(roomNumber);
+        updateCSV(customers,staffs);
     }
 
     public String printInvoice(Customer customer) {
@@ -166,6 +196,39 @@ public class Booking {
 
     public void setCheckOutDateTime(long checkOutDateTime) {
         this.checkOutDateTime = checkOutDateTime;
+    }
+
+    public void updateCSV(TreeMap<String,Customer> customerS,TreeMap<String,Staff> staffS) throws IOException {
+        CSVWriter writer = new CSVWriter(new FileWriter("Customer.csv"));
+        String[] header1 = { "Name", "Contact Number", "ID Proof","Room Number","Booking ID","Booking Status" };
+        writer.writeNext(header1);
+        for (String key : customerS.keySet())
+        {
+            String[] entry = new String[6];
+            entry[0] = customerS.get(key).getName();
+            entry[1] = customerS.get(key).getContactNumber();
+            entry[2] = key;
+            entry[3] = String.valueOf(customerS.get(key).getRoomNumber());
+            entry[4] = String.valueOf(customerS.get(key).getBookingID());
+            entry[5] = customerS.get(key).getBookingStatus();
+            writer.writeNext(entry);
+        }
+        writer.close();
+
+        writer = new CSVWriter(new FileWriter("Staff.csv"));
+        String[] header2 = { "Name", "Staff ID", "Designation","User ID","Password"};
+        writer.writeNext(header2);
+        for (String key : staffS.keySet())
+        {
+            String[] entry = new String[5];
+            entry[0] = staffS.get(key).getName();
+            entry[1] = key;
+            entry[2] = staffS.get(key).getDesignation();
+            entry[3] = staffS.get(key).getUserId();
+            entry[4] = staffS.get(key).getPassword();
+            writer.writeNext(entry);
+        }
+        writer.close();
     }
 
     public void summary() {
@@ -215,7 +278,7 @@ public class Booking {
             try {
                 managementSystem = new Booking();
                 break;
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | IOException e) {
                 IO.outputString(e.getMessage());
             }
         }
@@ -232,7 +295,7 @@ public class Booking {
                 else if (task == 5) managementSystem.checkOUT();
                 else if (task == 6) managementSystem.summary();
                 else IO.outputString("Invalid option, try again.");
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | IOException e) {
                 IO.outputString(e.getMessage());
             }
         }

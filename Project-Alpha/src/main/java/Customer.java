@@ -1,4 +1,4 @@
-public class Customer {
+public class Customer{
     /**
      * The name of the Customer.
      */
