@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.time.LocalDate;
 import java.util.*;
 
 public class Booking {
@@ -18,9 +19,6 @@ public class Booking {
 
     private static InputOutputInterface IO = new IO();
 
-    private long checkInDateTime;
-    private long checkOutDateTime;
-
     public Booking() throws IOException {
         customers = new TreeMap<String, Customer>();
         staffs = new TreeMap<String, Staff>();
@@ -31,7 +29,13 @@ public class Booking {
             Customer customer = new Customer(row[0],row[1],row[2]);
             customer.setRoomNumber(Integer.parseInt(row[3]));
             customer.setBookingID(Integer.parseInt(row[4]));
-            customer.setBookingStatus(row[3]);
+            customer.setBookingStatus(row[5]);
+            if (customer.getCheckInDate() != null && customer.getCheckOutDate() != null)
+            {
+                customer.setCheckInDate(LocalDate.parse(row[6]));
+                customer.setCheckOutDate(LocalDate.parse(row[7]));
+            }
+            customer.setAmountDue(Double.parseDouble(row[8]));
             customers.put(customer.getIdProof(), customer);
         }
         reader.close();
@@ -43,14 +47,35 @@ public class Booking {
         }
         reader.close();
 
-        IO.outputString(">>>>>>> Welcome to the Motel Management System <<<<<<<");
-        int firstRoom = IO.readInt("Please enter the first room number: ");
-        IO.outputString("Entered: " + firstRoom);
-        int lastRoom = IO.readInt("Please enter the last room number: ");
-        IO.outputString("Entered: " + lastRoom);
-        int roomRate = IO.readInt("Please enter the room rate: ");
-        IO.outputString("Entered: " + roomRate);
-        rooms = new Room(firstRoom, lastRoom, roomRate);
+
+        reader = new CSVReaderBuilder(new FileReader("Room.csv")).withSkipLines(1).build();
+        List<String[]> allRoomData = reader.readAll();
+
+        int count = 0;
+        int firstRoom = 0;
+        int lastRoom = 0;
+        for (String[] row: allRoomData)
+        {
+            if (count == 0)
+            {
+                firstRoom = Integer.parseInt(row[0]);
+            }
+            if (count == (allRoomData.size() - 1))
+            {
+                lastRoom = Integer.parseInt(row[0]);
+            }
+            count++;
+        }
+        rooms = new Room(firstRoom,lastRoom);
+        for (String[] row: allRoomData)
+        {
+            if (row[1].equals("Y"))
+            {
+                Customer customeR = customers.get(row[3]);
+                customeR.setRoomRate(Double.parseDouble(row[2]));
+                rooms.assignCustomerToRoom(customeR,Integer.parseInt(row[0]));
+            }
+        }
     }
 
     /**
@@ -59,14 +84,15 @@ public class Booking {
      */
     public void addStaff() throws IOException {
         IO.outputString("Adding Staff member to the database...");
-        String id = IO.readString("Please enter your id: ");
-        IO.outputString("Entered: " + id);
-        if (!staffs.containsKey(id)) {
-            throw new IllegalStateException("Sorry you are not an existing staff member and cannot have privileges to add any new member.");
+
+        try {
+            verifyStaff(staffs);
+        }catch (Exception e)
+        {
+            IO.outputString(e.getMessage());
+            return;
         }
-        if (!staffs.get(id).getDesignation().equals("Manager") && !staffs.get(id).getDesignation().equals("Owner")) {
-            throw new IllegalStateException("Sorry you are not privileged to add any new staff member.");
-        }
+
         String name = IO.readString("Enter the name of the new staff member: ");
         IO.outputString("Entered: " + name);
         String staffID = IO.readString("Enter the staff id for new staff member: ");
@@ -80,8 +106,33 @@ public class Booking {
 
         Staff staff = new Staff(name, staffID, designation, null, null);
         staffs.put(staffID, staff);
-        updateCSV(customers,staffs);
+        updateCSV(customers,staffs,rooms);
     }
+
+    public void verifyStaff(TreeMap<String,Staff> staffs)
+    {
+        String id = IO.readString("Please enter your staff id: ");
+        IO.outputString("Entered: " + id);
+        if (!staffs.containsKey(id)) {
+            throw new IllegalStateException("Sorry you are not an existing staff member and cannot have privileges to add any new member.");
+        }
+        if (!staffs.get(id).getDesignation().equals("Manager") && !staffs.get(id).getDesignation().equals("Owner")) {
+            throw new IllegalStateException("Sorry you are not privileged to add any new staff member.");
+        }
+
+        String userID = IO.readString("Please enter your user ID: ");
+        IO.outputString("Entered: "+ userID);
+        if (!staffs.get(id).getUserId().equals(userID))
+        {
+            throw new IllegalStateException("Sorry you entered a wrong user ID. Please, try it again!");
+        }
+        String pass = IO.readString("Please enter your password: ");
+        if (!staffs.get(id).getPassword().equals(pass))
+        {
+            throw new IllegalStateException("Sorry you entered a wrong password. Please, try it again!");
+        }
+    }
+
 
     /**
      * Gets the information for a new customer and then add the customer
@@ -101,7 +152,7 @@ public class Booking {
 
         Customer customer = new Customer(name, contactNumber, id);
         customers.put(id, customer);
-        updateCSV(customers,staffs);
+        updateCSV(customers,staffs,rooms);
     }
 
     /**
@@ -131,6 +182,27 @@ public class Booking {
                     + "the value must be between " + rooms.getFirstRoom()
                     + " and " + rooms.getLastRoom());
 
+        LocalDate todaysDate = LocalDate.now();
+        customer.setCheckInDate(todaysDate);
+
+        int stay = IO.readInt("Please enter the number of nights of stay: ");
+        IO.outputString("Entered: "+ stay);
+        if (stay <= 0)
+        {
+            throw new IllegalArgumentException("The entered stay: "+stay+" must be at least of 1 day.");
+        }
+        todaysDate = todaysDate.plusDays(stay);
+        customer.setCheckOutDate(todaysDate);
+
+        int roomRate = IO.readInt("Please enter room rate for 1 night for this booking: ");
+        IO.outputString("Entered: "+ roomRate);
+        if (roomRate <= 0)
+        {
+            throw new IllegalArgumentException("The entered room rate: "+roomRate+" cannot be 0 or less than it.");
+        }
+        customer.setRoomRate(roomRate);
+        customer.setAmountDue(stay*roomRate);
+
         int bookingID = IO.readInt("Enter the booking ID for the customer: ");
         IO.outputString("Entered: " + bookingID);
 
@@ -142,7 +214,7 @@ public class Booking {
         customer.setRoomNumber(roomNumber);
         customer.setBookingID(bookingID);
         customer.setBookingStatus("Reserved");
-        updateCSV(customers,staffs);
+        updateCSV(customers,staffs,rooms);
     }
 
     /**
@@ -172,45 +244,38 @@ public class Booking {
         customer.setBookingStatus("Checking OUT");
         IO.outputString(printInvoice(customer));
         rooms.freeRoom(roomNumber);
-        updateCSV(customers,staffs);
+        updateCSV(customers,staffs,rooms);
     }
 
     public String printInvoice(Customer customer) {
         String bill = "\n";
         bill += customer.toString();
-        bill += "\n Total amount due: $" + rooms.getRoomRate() + "\n";
+        bill += "\n Total amount due: $" + customer.getAmountDue() + "\n";
         return bill;
     }
 
-    public long getCheckInDateTime() {
-        return checkInDateTime;
-    }
-
-    public void setCheckInDateTime(long checkInDateTime) {
-        this.checkInDateTime = checkInDateTime;
-    }
-
-    public long getCheckOutDateTime() {
-        return checkOutDateTime;
-    }
-
-    public void setCheckOutDateTime(long checkOutDateTime) {
-        this.checkOutDateTime = checkOutDateTime;
-    }
-
-    public void updateCSV(TreeMap<String,Customer> customerS,TreeMap<String,Staff> staffS) throws IOException {
+    /**
+     * A mutator method that writes to database CSV files, the updated TreeMaps.
+     * @param customerS an updated version of customer TreeMap.
+     * @param staffS an updated version of staff TreeMap.
+     * @throws IOException when the CSV files are not accessible or not readable.
+     */
+    public void updateCSV(TreeMap<String,Customer> customerS,TreeMap<String,Staff> staffS,Room rooms) throws IOException {
         CSVWriter writer = new CSVWriter(new FileWriter("Customer.csv"));
-        String[] header1 = { "Name", "Contact Number", "ID Proof","Room Number","Booking ID","Booking Status" };
+        String[] header1 = { "Name", "Contact Number", "ID Proof","Room Number","Booking ID","Booking Status" ,"Check IN Date", "Check OUT Date","Amount Due"};
         writer.writeNext(header1);
         for (String key : customerS.keySet())
         {
-            String[] entry = new String[6];
+            String[] entry = new String[9];
             entry[0] = customerS.get(key).getName();
             entry[1] = customerS.get(key).getContactNumber();
             entry[2] = key;
             entry[3] = String.valueOf(customerS.get(key).getRoomNumber());
             entry[4] = String.valueOf(customerS.get(key).getBookingID());
             entry[5] = customerS.get(key).getBookingStatus();
+            entry[6] = String.valueOf(customerS.get(key).getCheckInDate());
+            entry[7] = String.valueOf(customerS.get(key).getCheckOutDate());
+            entry[8] = String.valueOf(customerS.get(key).getAmountDue());
             writer.writeNext(entry);
         }
         writer.close();
@@ -226,6 +291,31 @@ public class Booking {
             entry[2] = staffS.get(key).getDesignation();
             entry[3] = staffS.get(key).getUserId();
             entry[4] = staffS.get(key).getPassword();
+            writer.writeNext(entry);
+        }
+        writer.close();
+
+        writer = new CSVWriter(new FileWriter("Room.csv"));
+        String[] header3 = { "Room Number","Is Occupied", "Room Rate", "Customer ID","Customer Details"};
+        writer.writeNext(header3);
+        for (int roomNumber : rooms.allRooms())
+        {
+            String[] entry = new String[5];
+            entry[0] = String.valueOf(roomNumber);
+            if (rooms.isRoomOccupied(roomNumber))
+            {
+                entry[1] = "Y";
+                entry[2] = String.valueOf(rooms.getCustomer(roomNumber).getRoomRate());
+                entry[3] = rooms.getCustomer(roomNumber).getIdProof();
+                entry[4] = rooms.getCustomer(roomNumber).toString();
+            }
+            else
+            {
+                entry[1] = "N";
+                entry[2] = null;
+                entry[3] = null;
+                entry[4] = null;
+            }
             writer.writeNext(entry);
         }
         writer.close();

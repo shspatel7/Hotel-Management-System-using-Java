@@ -5,7 +5,7 @@ public class testRoom
     public static void main(String[] args) {
         int numErrors = 0;
 
-        Room R1 = new Room(100, 106, 200);
+        Room R1 = new Room(100, 106);
         if (R1.getFirstRoom() != 100) {
             System.out.println("Constructor failed: The room has number " + R1.getFirstRoom() + " rather than 100");
             numErrors++;
@@ -14,10 +14,11 @@ public class testRoom
             System.out.println("Constructor failed: The room has number " + R1.getLastRoom() + " rather than 106");
             numErrors++;
         }
-        if (R1.getRoomRate() != 200) {
-            System.out.println("Constructor failed: The rate of the room is " + R1.getRoomRate() + " rather than 200");
-            numErrors++;
-        }
+//        R1.setRoomRate(200);
+//        if (R1.getRoomRate() != 200) {
+//            System.out.println("Constructor failed: The rate of the room is " + R1.getRoomRate() + " rather than 200");
+//            numErrors++;
+//        }
 
         if (!R1.isValidRoom(103)) {
             System.out.println("isValidRoom() failed: The room number 103 is not valid instead it should be valid");
@@ -31,11 +32,11 @@ public class testRoom
                     "The room number 105 should have been occupied");
             numErrors++;
         }
-        R1.setRoomRate(190);
-        if (R1.getRoomRate() != 190) {
-            System.out.println("setRoomRate() failed: The rate of the room is " + R1.getRoomRate() + " rather than 190");
-            numErrors++;
-        }
+//        R1.setRoomRate(190);
+//        if (R1.getRoomRate() != 190) {
+//            System.out.println("setRoomRate() failed: The rate of the room is " + R1.getRoomRate() + " rather than 190");
+//            numErrors++;
+//        }
         if (R1.getCustomer(105) != C1) {
             System.out.println("getCustomer() failed: The Customer assigned to room number 105 is " +
                     R1.getCustomer(105) + " rather than Sachin");

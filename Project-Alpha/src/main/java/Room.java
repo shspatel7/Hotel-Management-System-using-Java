@@ -3,23 +3,18 @@ public class Room {
 
     private int minRoomNumber;
     private int maxRoomNumber;
-    private int roomRate;//is the cost of the particular room
     private Customer[] rooms;
 
     /**
      * constructor method
      */
-    public Room(int minRoomNumber, int maxRoomNumber, int roomRate){
+    public Room(int minRoomNumber, int maxRoomNumber){
         if (minRoomNumber < 0 || maxRoomNumber< 0|| maxRoomNumber < minRoomNumber)
             throw new IllegalArgumentException("The Room numbers " + minRoomNumber + " and " + maxRoomNumber
                     + " are invalid as they cannot be negative, and must have at least one room.");
-        if (roomRate < 0){
-            throw new IllegalArgumentException("The room rate: "+ roomRate + " is invalid as it cannot be negative.");
-        }
         this.minRoomNumber = minRoomNumber;
         this.maxRoomNumber = maxRoomNumber;
         this.rooms = new Customer[maxRoomNumber -  minRoomNumber + 1];
-        this.roomRate = roomRate;
     }
 
     /**
@@ -133,6 +128,20 @@ public class Room {
     }
 
     /**
+     * Return a list of the all rooms' room number of the Motel.
+     * @return a list of the all rooms' room number of the Motel
+     */
+    public LinkedList<Integer> allRooms()
+    {
+        LinkedList<Integer> roomList = new LinkedList<Integer>();
+        for (int i = getFirstRoom(); i <= getLastRoom(); i++)
+        {
+            roomList.addLast(i);
+        }
+        return roomList;
+    }
+
+    /**
      * Return a list of the empty rooms' room number of the Motel.
      * @return a list of the empty rooms' room number of the Motel
      */
@@ -143,27 +152,6 @@ public class Room {
             if (! isRoomOccupied(i))
                 roomList.addLast(i);
         return roomList;
-    }
-
-    /**
-     * gets the room rate
-     * @return the room rate
-     */
-    public int getRoomRate() {
-        return roomRate;
-    }
-
-    /**
-     * sets the room rate
-     * @param roomRate of the room that you want to set
-     */
-    public void setRoomRate(int roomRate) {
-        if (roomRate <= 0)
-        {
-            throw new IllegalArgumentException("The room rate: "+roomRate+
-                    " cannot be 0 or less than it.");
-        }
-        this.roomRate = roomRate;
     }
 
     /**

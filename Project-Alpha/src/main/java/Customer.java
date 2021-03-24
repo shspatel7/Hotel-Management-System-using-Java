@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+
 public class Customer{
     /**
      * The name of the Customer.
@@ -30,6 +32,26 @@ public class Customer{
     private String bookingStatus;
 
     /**
+     * Customer's check IN date
+     */
+    private LocalDate checkInDate;
+
+    /**
+     * Customer's check OUT date
+     */
+    private LocalDate checkOutDate;
+
+    /**
+     * Customer's Amount Due.
+     */
+    private double amountDue;
+
+    /**
+     * The room rate for the customer's room.
+     */
+    private double roomRate;
+
+    /**
      *
      * @param cName Name of the customer
      * @param cNumber Contact number of the customer
@@ -42,6 +64,10 @@ public class Customer{
         this.roomNumber = -1;
         this.bookingID = -1;
         this.bookingStatus= null;
+        this.checkInDate = null;
+        this.checkOutDate = null;
+        this.amountDue = 0;
+        this.roomRate = 0;
     }
 
     /**
@@ -152,8 +178,86 @@ public class Customer{
     }
 
     /**
+     * The method that returns the customer's check IN date.
+     * @return the check IN date
+     */
+    public LocalDate getCheckInDate()
+    {
+        return this.checkInDate;
+    }
+
+    /**
+     * The method that returns the customer's check OUT date.
+     * @return the check OUT date
+     */
+    public LocalDate getCheckOutDate()
+    {
+        return this.checkOutDate;
+    }
+
+    /**
+     * A method to set checkIN date
+     * @param date
+     */
+    public void setCheckInDate(LocalDate date)
+    {
+        this.checkInDate = date;
+    }
+
+    /**
+     * A method to set checkOUT date
+     * @param date
+     */
+    public void setCheckOutDate(LocalDate date)
+    {
+        this.checkOutDate = date;
+    }
+
+    /**
+     * A method that returns the amount which is due to Customer.
+     * @return the amount due
+     */
+    public double getAmountDue()
+    {
+        return this.amountDue;
+    }
+
+    /**
+     * The method to set customer's amount due
+     * @param amountDue to customer
+     */
+    public void setAmountDue(double amountDue)
+    {
+        if (amountDue < 0){
+            throw new IllegalArgumentException("The amount: "+ amountDue +" cannot be negative.");
+        }
+        this.amountDue = amountDue;
+    }
+
+    /**
+     * A method to get the room rate assigned to the customer's booking.
+      * @return the room rate of customer's booking.
+     */
+    public double getRoomRate()
+    {
+        return this.roomRate;
+    }
+
+    /**
+     *A method to set the room rate for the customer.
+     * @param roomRate assigned to the customer's booking.
+     */
+    public void setRoomRate(double roomRate)
+    {
+        if (roomRate < 0)
+        {
+            throw new IllegalArgumentException("The given room rate: "+roomRate+" cannot be negative.");
+        }
+        this.roomRate = roomRate;
+    }
+
+    /**
      * Return a string representation of the customer.
-     *
      * @return a string representation of the customer.
      */
     public String toString() {
