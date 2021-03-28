@@ -231,7 +231,11 @@ public class Customer{
         if (amountDue < 0){
             throw new IllegalArgumentException("The amount: "+ amountDue +" cannot be negative.");
         }
-        this.amountDue = amountDue;
+        if (amountDue == 0)
+        {
+            this.amountDue = 0;
+        }
+        this.amountDue += amountDue;
     }
 
     /**

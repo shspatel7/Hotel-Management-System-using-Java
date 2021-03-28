@@ -1,0 +1,34 @@
+"Customer ID","Name","Invoice","Booking ID"
+"123","Shreyul Patel","
+Date: 2021-03-28
+
+Name: Shreyul Patel
+Contact number: 123456
+ID Proof: 123
+Room Number:102
+Booking ID:5214
+Booking Status:Checking OUT
+ Total amount due: $74.0
+","5214"
+"123","Shreyul Patel","
+Date: 2021-03-30
+
+Name: Shreyul Patel
+Contact number: 123456
+ID Proof: 123
+Room Number:111
+Booking ID:124
+Booking Status:Checking OUT
+ Total amount due: $222.0
+","124"
+"123","Shreyul Patel","
+Date: 2021-03-29
+
+Name: Shreyul Patel
+Contact number: 123456
+ID Proof: 123
+Room Number:102
+Booking ID:451
+Booking Status:Checking OUT
+ Total amount due: $27.0
+","451"

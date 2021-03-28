@@ -6,19 +6,36 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.util.*;
 
 public class Booking {
+    /**
+     * Treemap for customer data and keyed customer's id proof
+     */
     private TreeMap<String, Customer> customers;
 
+    /**
+     * Treemap for staff data and keyed staff member's id
+     */
     private TreeMap<String, Staff> staffs;
 
+    /**
+     * Rooms for the Motel
+     */
     private Room rooms;
 
+    /**
+     * The instance for the input output interface
+     */
     private static InputOutputInterface IO = new IO();
 
+    /**
+     * The constructor for booking class. It reads in the data from
+     * existing csv database files and initializes the customer and staff
+     * treemaps and rooms.
+     * @throws IOException
+     */
     public Booking() throws IOException {
         customers = new TreeMap<String, Customer>();
         staffs = new TreeMap<String, Staff>();
@@ -84,15 +101,7 @@ public class Booking {
      */
     public void addStaff() throws IOException {
         IO.outputString("Adding Staff member to the database...");
-
-        try {
-            verifyStaff(staffs);
-        }catch (Exception e)
-        {
-            IO.outputString(e.getMessage());
-            return;
-        }
-
+        verifyOwnerAndManger();
         String name = IO.readString("Enter the name of the new staff member: ");
         IO.outputString("Entered: " + name);
         String staffID = IO.readString("Enter the staff id for new staff member: ");
@@ -109,17 +118,14 @@ public class Booking {
         updateCSV(customers,staffs,rooms);
     }
 
-    public void verifyStaff(TreeMap<String,Staff> staffs)
-    {
-        String id = IO.readString("Please enter your staff id: ");
-        IO.outputString("Entered: " + id);
-        if (!staffs.containsKey(id)) {
-            throw new IllegalStateException("Sorry you are not an existing staff member and cannot have privileges to add any new member.");
-        }
-        if (!staffs.get(id).getDesignation().equals("Manager") && !staffs.get(id).getDesignation().equals("Owner")) {
-            throw new IllegalStateException("Sorry you are not privileged to add any new staff member.");
-        }
 
+    /**
+     * A method that checks the login details for admin tasks.
+     * @param staffs the staff data treemap
+     * @param id id for the staff that you are verifying
+     */
+    public void loginCheck(TreeMap<String,Staff> staffs,String id)
+    {
         String userID = IO.readString("Please enter your user ID: ");
         IO.outputString("Entered: "+ userID);
         if (!staffs.get(id).getUserId().equals(userID))
@@ -153,6 +159,81 @@ public class Booking {
         Customer customer = new Customer(name, contactNumber, id);
         customers.put(id, customer);
         updateCSV(customers,staffs,rooms);
+    }
+
+    /**
+     * A method that verifies if the staff member is
+     * owner or manager for some admin tasks
+     */
+    public void verifyOwnerAndManger()
+    {
+        String id = IO.readString("Please enter your staff id: ");
+        IO.outputString("Entered: " + id);
+        if (!staffs.containsKey(id)) {
+            throw new IllegalStateException("Sorry you are not an existing staff member and cannot have privileges to perform this task.");
+        }
+        if (!staffs.get(id).getDesignation().equals("Manager") && !staffs.get(id).getDesignation().equals("Owner")) {
+            throw new IllegalStateException("Sorry you are not privileged to do this task.");
+        }
+        try {
+            loginCheck(staffs,id);
+        }catch (Exception e)
+        {
+            IO.outputString(e.getMessage());
+        }
+    }
+
+    /**
+     * A method that verifies if the staff member is
+     * owner or manager or accountant or receptionist. for some admin tasks
+     */
+    public void verifyStaff()
+    {
+        String id = IO.readString("Please enter your staff id: ");
+        IO.outputString("Entered: " + id);
+        if (!staffs.containsKey(id)) {
+            throw new IllegalStateException("Sorry you are not an existing staff member and cannot have privileges to perform this task.");
+        }
+        if (!staffs.get(id).getDesignation().equals("Manager") && !staffs.get(id).getDesignation().equals("Owner")
+            && !staffs.get(id).getDesignation().equals("Receptionist") && !staffs.get(id).getDesignation().equals("Accountant")) {
+            throw new IllegalStateException("Sorry you are not privileged to do this task.");
+        }
+        try {
+            loginCheck(staffs,id);
+        }catch (Exception e)
+        {
+            IO.outputString(e.getMessage());
+        }
+    }
+
+    /**
+     * A method to remove customer form the database.
+     */
+    public void removeCustomer()
+    {
+        IO.outputString("Removing Customer from the database...");
+        verifyOwnerAndManger();
+        String id = IO.readString("Enter the id proof number of the Customer: ");
+        IO.outputString("Entered: " + id);
+        if (!customers.containsKey(id)) {
+            throw new IllegalStateException("Customer with the id: " + id + " not found in database.");
+        }
+        customers.remove(id);
+    }
+
+    /**
+     * A method to remove staff member from the database.
+     */
+    public void removeStaff()
+    {
+        IO.outputString("Removing Staff member from the database...");
+        verifyOwnerAndManger();
+        String id = IO.readString("Enter the Staff ID of the staff member: ");
+        IO.outputString("Entered: " + id);
+        if (!staffs.containsKey(id)) {
+            throw new IllegalStateException("Staff member with the staff id: " + id + " not found in database.");
+        }
+        staffs.remove(id);
     }
 
     /**
@@ -201,7 +282,8 @@ public class Booking {
             throw new IllegalArgumentException("The entered room rate: "+roomRate+" cannot be 0 or less than it.");
         }
         customer.setRoomRate(roomRate);
-        customer.setAmountDue(stay*roomRate);
+        int promotion = IO.readInt("Do you want to add promo? If yes enter amount else, enter 0.");
+        customer.setAmountDue((stay*roomRate)-promotion);
 
         int bookingID = IO.readInt("Enter the booking ID for the customer: ");
         IO.outputString("Entered: " + bookingID);
@@ -243,12 +325,82 @@ public class Booking {
 
         customer.setBookingStatus("Checking OUT");
         IO.outputString(printInvoice(customer));
+        writeInvoice(customer);
+        IO.outputString("Did the customer paid the amount due?");
+        String[] yesNo = new String[]{"Yes","No"};
+        int choice = IO.readChoice(yesNo);
+        if (choice == 0)
+        {
+            customer.setAmountDue(0.0);
+        }
         rooms.freeRoom(roomNumber);
         updateCSV(customers,staffs,rooms);
     }
 
+    /**
+     * A method that writes the generated invoice to the database
+     * as a record of sales.
+     * @param customer
+     */
+    public void writeInvoice(Customer customer) throws IOException {
+        CSVReader reader = new CSVReaderBuilder(new FileReader("Invoices.csv")).withSkipLines(0).build();
+        List<String[]> allInvoiceData = reader.readAll();
+        reader.close();
+
+        CSVWriter writer = new CSVWriter(new FileWriter("Invoices.csv"));
+
+        for (String[] row : allInvoiceData)
+        {
+            writer.writeNext(row);
+        }
+        String[] entry = new String[4];
+        entry[0] = customer.getIdProof();
+        entry[1] = customer.getName();
+        entry[2] = printInvoice(customer);
+        entry[3] = String.valueOf(customer.getBookingID());
+        writer.writeNext(entry);
+        writer.close();
+    }
+
+    /**
+     *  A method to display invoices from the database from the booking ID.
+     * @throws IOException
+     */
+    public void displayInvoices() throws IOException {
+        verifyStaff();
+        IO.outputString("Please select the Booking ID for which you want to see the invoice");
+        CSVReader reader = new CSVReaderBuilder(new FileReader("Invoices.csv")).withSkipLines(1).build();
+        List<String[]> allInvoiceData = reader.readAll();
+        reader.close();
+        String[] listOfBookingID = new String[allInvoiceData.size()];
+        int count = 0;
+        for (String[] row : allInvoiceData)
+        {
+            listOfBookingID[count] = row[3];
+            count++;
+        }
+
+        int index = IO.readChoice(listOfBookingID);
+        count = 0;
+        for (String[] row : allInvoiceData)
+        {
+            if (count == index)
+            {
+                IO.outputString(row[2]);
+            }
+            count++;
+        }
+    }
+
+    /**
+     * A method that prints the invoices for the customer that are checking out.
+     * @param customer the customer that  is checking out.
+     * @return
+     */
     public String printInvoice(Customer customer) {
         String bill = "\n";
+        bill += "Date: ";
+        bill += customer.getCheckOutDate().toString() + "\n";
         bill += customer.toString();
         bill += "\n Total amount due: $" + customer.getAmountDue() + "\n";
         return bill;
@@ -258,6 +410,7 @@ public class Booking {
      * A mutator method that writes to database CSV files, the updated TreeMaps.
      * @param customerS an updated version of customer TreeMap.
      * @param staffS an updated version of staff TreeMap.
+     * @param rooms  updated rooms
      * @throws IOException when the CSV files are not accessible or not readable.
      */
     public void updateCSV(TreeMap<String,Customer> customerS,TreeMap<String,Staff> staffS,Room rooms) throws IOException {
@@ -321,6 +474,10 @@ public class Booking {
         writer.close();
     }
 
+    /**
+     * A method that display summary of the Motel management system
+     * A report of current state in management system.
+     */
     public void summary() {
         IO.outputString(this.toString());
     }
@@ -331,7 +488,6 @@ public class Booking {
      * the Motel Management System in a form suitable for printing.
      * For instance it might include information about the rooms,
      * a list of customers and a list of staff members
-     *
      * @return details about rooms, customers and staffs in the system.
      */
     public String toString() {
@@ -358,11 +514,16 @@ public class Booking {
         return data;
     }
 
-    public static void main(String[] args) {
+    /**
+     *
+     * @param args
+     * @throws IOException
+     */
+    public static void main(String[] args) throws IOException {
         int task = -1;
         Booking managementSystem;
         IO.outputString("Initializing the Motel Management system...");
-
+        IO.outputString(">>>>>>>> Welcome to Motel Management System <<<<<<<<");
         while (true) {
             // keep prompting until the user enters the data correctly
             try {
@@ -375,7 +536,9 @@ public class Booking {
 
         while (task != 1) {
             try {
-                String[] optionSList = new String[]{"1: Quit", "2: add a new customer", "3: add a new staff member", "4: Check IN", "5: Check OUT", "6: Display Summary"};
+                String[] optionSList = new String[]{"1: Quit", "2: Add a new customer", "3: Add a new staff member",
+                        "4: Check IN", "5: Check OUT","6. Remove Customer","7. Remove Staff member","8. Get Invoice" ,
+                        "9: Display Summary"};
                 task = IO.readChoice(optionSList);
                 task += 1;
                 if (task == 1) managementSystem.summary();
@@ -383,10 +546,14 @@ public class Booking {
                 else if (task == 3) managementSystem.addStaff();
                 else if (task == 4) managementSystem.checkIN();
                 else if (task == 5) managementSystem.checkOUT();
-                else if (task == 6) managementSystem.summary();
+                else if (task == 6) managementSystem.removeCustomer();
+                else if (task == 7) managementSystem.removeStaff();
+                else if (task == 8) managementSystem.displayInvoices();
+                else if (task == 9) managementSystem.summary();
                 else IO.outputString("Invalid option, try again.");
             } catch (RuntimeException | IOException e) {
                 IO.outputString(e.getMessage());
+                managementSystem.updateCSV(managementSystem.customers, managementSystem.staffs, managementSystem.rooms);
             }
         }
     }

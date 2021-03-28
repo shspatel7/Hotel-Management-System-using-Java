@@ -12,10 +12,11 @@ public class IO implements InputOutputInterface
      * @param options an array with the options that are presented to the user
      * @return the int specifying the array index for the option selected by the user
      */
+
     public int readChoice(String[] options) {
         String selection = (String) JOptionPane.showInputDialog(null, // parent component
                 "Please select an option ", // prompt
-                "Choice Selection", // window title
+                "Motel Management System", // window title
                 JOptionPane.QUESTION_MESSAGE, // type of message
                 null, // icon displayed
                 options, // choices for the Combo box
@@ -27,7 +28,11 @@ public class IO implements InputOutputInterface
                 return i;
         JOptionPane.showMessageDialog(null, "Illegal choice: " + selection + "\n");
         return readChoice(options);
+
     }
+    
+    
+
     /**
      * A method that uses JOptionPane to acquire input from the user, and returns a String
      * @param prompt the string to be displayed as a prompt
@@ -36,6 +41,7 @@ public class IO implements InputOutputInterface
     @Override
     public String readString(String prompt)
     {
+
         String input = JOptionPane.showInputDialog(null, prompt);
         String output;
         if (input != null && input.length() > 0)
@@ -73,6 +79,7 @@ public class IO implements InputOutputInterface
             }
             catch (NumberFormatException e)
             {
+
                 output = readInt("Given input is invalid!\n"+prompt);
             }
         }

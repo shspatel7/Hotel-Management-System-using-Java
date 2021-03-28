@@ -14,14 +14,23 @@ public class testRoom
             System.out.println("Constructor failed: The room has number " + R1.getLastRoom() + " rather than 106");
             numErrors++;
         }
-//        R1.setRoomRate(200);
-//        if (R1.getRoomRate() != 200) {
-//            System.out.println("Constructor failed: The rate of the room is " + R1.getRoomRate() + " rather than 200");
-//            numErrors++;
-//        }
 
         if (!R1.isValidRoom(103)) {
             System.out.println("isValidRoom() failed: The room number 103 is not valid instead it should be valid");
+            numErrors++;
+        }
+
+        LinkedList<Integer> expectedAllRooms = new LinkedList<>();
+        expectedAllRooms.add(100);
+        expectedAllRooms.add(101);
+        expectedAllRooms.add(102);
+        expectedAllRooms.add(103);
+        expectedAllRooms.add(104);
+        expectedAllRooms.add(105);
+        expectedAllRooms.add(106);
+        if(!R1.allRooms().equals(expectedAllRooms)) {
+            System.out.println("allRooms() failed: The room number list should be " +
+                    "[100, 101, 102, 103, 104, 105, 106] instead of " + R1.allRooms());
             numErrors++;
         }
 
@@ -32,16 +41,13 @@ public class testRoom
                     "The room number 105 should have been occupied");
             numErrors++;
         }
-//        R1.setRoomRate(190);
-//        if (R1.getRoomRate() != 190) {
-//            System.out.println("setRoomRate() failed: The rate of the room is " + R1.getRoomRate() + " rather than 190");
-//            numErrors++;
-//        }
+
         if (R1.getCustomer(105) != C1) {
             System.out.println("getCustomer() failed: The Customer assigned to room number 105 is " +
                     R1.getCustomer(105) + " rather than Sachin");
             numErrors++;
         }
+
 
         String expected1 = "The Missouri Inn Motel has 7 rooms. And it has these customers: \n" +
                 "Room: 100 Customer: null\n" +

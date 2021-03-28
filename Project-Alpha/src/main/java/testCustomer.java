@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+
 public class testCustomer
 {
     public static void main(String[] args) {
@@ -39,6 +41,13 @@ public class testCustomer
         if (!C1.getBookingStatus().equals("Confirmed")) {
             System.out.println("setBookingStatus() or getBookingStatus() failed: The customer's booking " +
                     "status should have been Confirmed instead of " + C1.getBookingStatus());
+            numErrors++;
+        }
+
+        C1.setAmountDue(199.99);
+        if (C1.getAmountDue() != 199.99) {
+            System.out.println("setAmountDue() or getAmountDue() failed: The customer's amount due " +
+                    "should have been 199.99 instead of " + C1.getAmountDue());
             numErrors++;
         }
 
@@ -90,6 +99,13 @@ public class testCustomer
         if (!C2.getBookingStatus().equals("Confirmed")) {
             System.out.println("setBookingStatus() or getBookingStatus() failed: The customer's booking " +
                     "status should have been Confirmed instead of " + C2.getBookingStatus());
+            numErrors++;
+        }
+
+        C2.setAmountDue(249.99);
+        if (C2.getAmountDue() != 249.99) {
+            System.out.println("setAmountDue() or getAmountDue() failed: The customer's amount due " +
+                    "should have been 199.99 instead of " + C2.getAmountDue());
             numErrors++;
         }
 
